@@ -1,0 +1,17 @@
+{
+  "name": "lolrune",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^14.0.11",
+    "axios": "^0.19.2",
+    "node-wmi": "^0.0.5",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5",
+    "winston": "^3.2.1"
+  }
+}
