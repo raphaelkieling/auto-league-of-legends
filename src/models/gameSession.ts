@@ -1,5 +1,6 @@
 export class GameBans {
-    myTeamBans: any[];
+
+    myTeamBans: number[];
     numBans: number;
     theirTeamBans: any[];
 
@@ -39,7 +40,7 @@ export class GameAction {
 
 export class TeamPick {
     // TODO: Não sei se vai ficar assim essas lanes mas jungler ta certo
-    assignedPosition: "jungler" | "top" | "mid" | "bot" | "support";
+    assignedPosition: "jungler" | "top" | "middle" | "bottom" | "utility";
     cellId: number;
     championId: number;
     championPickIntent: number;
@@ -68,7 +69,8 @@ export class TeamPick {
 
 export enum GamePhase {
     BAN_PICK = 'BAN_PICK',
-    FINALIZATION = 'FINALIZATION'
+    FINALIZATION = 'FINALIZATION',
+    PLANNING = 'PLANNING'
 }
 
 export class GameTimer {
@@ -99,6 +101,7 @@ export default class GameSession {
     timer: GameTimer;
 
     constructor(model: GameSession) {
+        console.log(model)
         this.actions = model.actions.map(item => item.map(item2 => new GameAction(item2)));
         this.allowBattleBoost = model.allowBattleBoost;
         this.allowSkinSelection = model.allowSkinSelection;
@@ -114,8 +117,14 @@ export default class GameSession {
         let pickAction: GameAction | null = null;
 
         this.actions.forEach(actionsArray => {
-            const actions = actionsArray.filter(items2 => items2.type === ActionType.PICK && items2.actorCellId == this.localPlayerCellId);
-            pickAction = actions.length ? actions[0] : null;
+            const actions = actionsArray.filter(items2 =>
+                items2.type === ActionType.PICK &&
+                items2.actorCellId == this.localPlayerCellId &&
+                items2.completed == false &&
+                items2.isInProgress == true
+            );
+            if (!pickAction)
+                pickAction = actions.length ? actions[0] : null;
         })
 
         return pickAction;
@@ -126,8 +135,15 @@ export default class GameSession {
         let pickAction: GameAction | null = null;
 
         this.actions.forEach(actionsArray => {
-            const actions = actionsArray.filter(items2 => items2.type === ActionType.BAN && items2.actorCellId == this.localPlayerCellId);
-            pickAction = actions.length ? actions[0] : null;
+            const actions = actionsArray.filter(items2 =>
+                items2.type === ActionType.BAN &&
+                items2.actorCellId == this.localPlayerCellId &&
+                items2.completed == false &&
+                items2.isInProgress == true
+            );
+
+            if (!pickAction)
+                pickAction = actions.length ? actions[0] : null;
         })
 
         return pickAction;

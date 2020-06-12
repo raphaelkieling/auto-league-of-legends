@@ -37,7 +37,7 @@ export default class LCUConnector extends Connector {
               protocol: d[4],
               authToken: "Basic " +
                 Buffer.from("riot:" + d[3]).toString("base64"),
-              baseUri: `${d[4]}://riot:${d[3]}@127.0.0.1:${d[2]}/`,
+              baseUri: `${d[4]}://riot:${d[3]}@127.0.0.1:${d[2]}`,
             },
           );
         },
@@ -60,8 +60,10 @@ export default class LCUConnector extends Connector {
       }),
     });
 
+    console.log(`${this.lockFile.baseUri}${url}`)
+    
     return instance({
-      url: `https://127.0.0.1:${this.lockFile.port}${url}`,
+      url: `${this.lockFile.baseUri}${url}`,
       method,
       data,
       headers: { "Authorization": this.lockFile.authToken },
@@ -91,6 +93,6 @@ export default class LCUConnector extends Connector {
 
   initListener() {
     this.connection();
-    this.gameConnector.initListener();
+    // this.gameConnector.initListener();
   }
 }
