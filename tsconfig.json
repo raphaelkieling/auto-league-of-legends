@@ -3,6 +3,7 @@
     "esModuleInterop": true,
     "target": "ESNext",
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
       "@/*": "./src"
     }

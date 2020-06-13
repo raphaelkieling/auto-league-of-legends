@@ -11,7 +11,6 @@ enum StatusQueueMatch {
 }
 
 export default class GameConnector extends Connector {
-  statusQueueMatch?: StatusQueueMatch;
   gameSession?: GameSession;
 
   constructor(private lcuConnector: LCUConnector) {
@@ -38,35 +37,39 @@ export default class GameConnector extends Connector {
       })
   }
 
-  match() {
-    return this.lcuConnector.makeRequest<GameSearch>("get", "/lol-matchmaking/v1/search")
-      .then(data => {
-        if (!data) {
-          this.onlyOnChange("statusQueueMatch", StatusQueueMatch.stopped, () => this.emit("queue-match-stop"))
-        }
+  watchSearch() {
+    this.lcuConnector.initSocketListener("OnJsonApiEvent_lol-matchmaking_v1_search", (socketEvent) => {
+      const data = socketEvent.getData<GameSearch>();
 
-        const gameSearch = new GameSearch(data);
+      if (!data) {
+        return this.emit("queue-match-stop")
+      }
 
-        if (gameSearch.isFounded()) {
-          this.onlyOnChange("statusQueueMatch", StatusQueueMatch.founded, () => this.emit("queue-match-found", gameSearch))
-        } else if (gameSearch.isSearching()) {
-          this.onlyOnChange("statusQueueMatch", StatusQueueMatch.searching, () => this.emit("queue-match-search", gameSearch))
-        }
-      })
-      .catch(() => {
-        this.onlyOnChange("statusQueueMatch", StatusQueueMatch.error, () => this.emit("queue-match-error"))
-      })
+      const gameSearch = new GameSearch(data);
+
+      if (gameSearch.isFounded()) {
+        this.emit("queue-match-found", gameSearch)
+      } else if (gameSearch.isSearching()) {
+        this.emit("queue-match-search", gameSearch)
+      }
+    })
   }
 
-  matchSession() {
-    return this.lcuConnector.makeRequest<GameSession>("get", "/lol-champ-select/v1/session")
-      .then(gameSession => {
-        const gameSessionInstace = new GameSession(gameSession);
-        this.onlyOnChange("gameSession", gameSessionInstace, () => this.emit("match-session", gameSessionInstace))
-      })
-      .catch(err => {
-        this.onlyOnChange("gameSession", null, () => this.emit("match-session", null))
-      })
+  watchChampSession(): void {
+    this.lcuConnector.initSocketListener("OnJsonApiEvent_lol-champ-select_v1_session", (socketEvent) => {
+      const data = socketEvent.getData<GameSession>();
+
+      if (!data) {
+        this.gameSession = null;
+        return this.emit("match-session", null)
+      }
+
+      const gameSession = new GameSession(data);
+
+      this.gameSession = gameSession
+
+      this.emit("match-session", this.gameSession);
+    })
   }
 
   selectChampion(actionId: number, championId: number) {
@@ -79,8 +82,21 @@ export default class GameConnector extends Connector {
     return this.lcuConnector.makeRequest("post", `/lol-champ-select/v1/session/actions/${actionId.toString()}/complete`);
   }
 
+  getChampionInfoSession(championId: number) {
+    return this.lcuConnector.makeRequest("get", `/lol-champ-select/v1/grid-champions/${championId.toString()}`);
+  }
+
+  setSpells(spell1Id: number, spell2Id: number): Promise<any> {
+    return this.lcuConnector.makeRequest("patch", "/lol-champ-select/v1/session/my-selection", {
+      spell1Id,
+      spell2Id
+    });
+  }
+
   initListener() {
-    this.match();
-    this.matchSession();
+    this.lcuConnector.on("socket-open", () => {
+      this.watchSearch();
+      this.watchChampSession();
+    });
   }
 }

@@ -101,7 +101,6 @@ export default class GameSession {
     timer: GameTimer;
 
     constructor(model: GameSession) {
-        console.log(model)
         this.actions = model.actions.map(item => item.map(item2 => new GameAction(item2)));
         this.allowBattleBoost = model.allowBattleBoost;
         this.allowSkinSelection = model.allowSkinSelection;

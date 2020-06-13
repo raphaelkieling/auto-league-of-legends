@@ -8,10 +8,13 @@
   },
   "dependencies": {
     "@types/node": "^14.0.11",
+    "@types/winston": "^2.4.4",
     "axios": "^0.19.2",
+    "deep-object-diff": "^1.1.0",
     "node-wmi": "^0.0.5",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "ws": "^7.3.0"
   }
 }
